@@ -1,5 +1,5 @@
 WITH 
-platform_actions AS (
+championing_actions AS (
 SELECT platform_action
 FROM public.user_platform_action_facts
 WHERE platform_action IN ('Made Collection Private','Made Collection Public','Made Moment Private','Made Moment Public','Invited User To Private Space','Invited User To Shared Space','Invited User To Group Space','Posted to Feed','Commented on Feed Post','Shared Collection to Feed','Shared Form Response to Feed','Shared Media to Feed','Shared Moment to Feed','Shared Note to Feed','Shared Link to Feed','Shared Post to Feed','Shared Program to Feed','Shared Result to Feed','Shared LandingPage to Feed','Shared Collection to Group Space','Shared Collection to Shared Space','Shared Form Response to Group Space','Shared Form Response to Shared Space','Shared Link to Group Space','Shared Link to Shared Space','Shared Media to Group Space','Shared Media to Shared Space','Shared Moment to Group Space','Shared Moment to Shared Space','Shared Note to Group Space','Shared Note to Shared Space','Shared Post to Group Space','Shared Post to Shared Space','Shared Program to Group Space','Shared Program to Shared Space','Shared Result to Group Space','Shared Result to Shared Space','Space Membership Invitation Accepted','Commented on Shared Space','Commented on Group Space','Posted to Shared Space','Posted to Group Space','Shared LandingPage to Group Space','Assigned To-Do Item','Became Champion Member','Became Organization Member','Rated Champion','Rated Program','Clicked Button on Page','Clicked Social Icon on Page','Commented on Group Space Post','Commented on Private Space Post','Commented on Shared Space Post','Commented on Timeline Post')
@@ -38,7 +38,7 @@ left join date_ranges dr
 ON upaf.date_id=dr.id
 left join public.user_connected_to_champion_bridges uccb 
 ON uccb.user_id=upaf.user_id
-WHERE upaf.platform_action IN (SELECT platform_action FROM platform_actions)
+WHERE upaf.platform_action IN (SELECT platform_action FROM championing_actions)
 AND dr.date_range!=2
 AND uccb.sequence_number=1
 GROUP BY uccb.champion_id, dr.date_range
