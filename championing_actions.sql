@@ -1,8 +1,8 @@
 WITH 
-platform_action_ids AS (
-SELECT platform_action_id
-FROM platform_action_fact
-WHERE platform_action_id IN (41,42)
+platform_actions AS (
+SELECT platform_action
+FROM public.user_platform_action_facts
+WHERE platform_action IN ('Answered Assessment Item' , 'Progressed Through Content' , 'Created Note in Content' , 'Added To-Do Item from Content' , 'Started Content')
 ),
 champion_ids AS (
 SELECT id AS champion_ids
@@ -32,13 +32,13 @@ FROM date_dim
 long_results AS (
 SELECT uccb.champion_id AS champion_id
 	, dr.date_range
-	, count(DISTINCT paf.id) AS value
-FROM platform_action_fact paf
+	, count(DISTINCT upaf.id) AS value
+FROM user_platform_action_facts upaf
 left join date_ranges dr
-ON paf.date_id=dr.id
+ON upaf.date_id=dr.id
 left join public.user_connected_to_champion_bridges uccb 
-ON uccb.user_id=paf.user_id
-WHERE paf.platform_action_id IN (SELECT platform_action_id FROM platform_action_ids)
+ON uccb.user_id=upaf.user_id
+WHERE upaf.platform_action IN (SELECT platform_action FROM platform_actions)
 AND dr.date_range!=2
 AND uccb.sequence_number=1
 GROUP BY uccb.champion_id, dr.date_range
