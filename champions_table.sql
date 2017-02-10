@@ -30,6 +30,9 @@ SELECT id
 		AND sql_date_stamp + (SELECT interval_length FROM interval_length) 
 		< current_date
 	THEN 0
+  	when sql_date_stamp + 2*(SELECT interval_length FROM interval_length) 
+		< current_date
+	THEN -1
 	ELSE 2
 end AS date_range
 FROM date_dim
@@ -45,13 +48,18 @@ left join public.user_connected_to_champion_bridges uccb
 ON uccb.user_id=upaf.user_id
 WHERE upaf.platform_action IN (SELECT platform_action FROM championing_actions)
 AND dr.date_range!=2
+AND dr.date_range>=0
 AND uccb.sequence_number=1
 GROUP BY uccb.champion_id, dr.date_range
 ),
 wide_results_championing_actions_0 AS (
 SELECT lr.champion_id
-	, sum(lr.date_range*lr.value) AS value_current
-	, sum((1-lr.date_range)*lr.value) AS value_previous
+	, sum(
+		((lr.date_range=1)::INTEGER)*lr.value
+	) AS value_current
+	, sum(
+		((lr.date_range=0)::INTEGER)*lr.value
+	) AS value_previous
 FROM long_results_championing_actions lr
 GROUP BY lr.champion_id
 ),
@@ -62,7 +70,7 @@ SELECT wr.champion_id
 	, wr.value_current
 	, case
 	when wr.value_previous!=0
-		THEN 1.0*(wr.value_current - wr.value_previous)/wr.value_previous 
+		THEN 100.0*(wr.value_current - wr.value_previous)/wr.value_previous 
 	ELSE NULL 
 	END AS pct_change
 FROM wide_results_championing_actions_0 wr
@@ -83,8 +91,12 @@ GROUP BY tcb.champion_id, dr.date_range
 ),
 wide_results_content_growth_0 AS (
 SELECT lr.champion_id
-	, sum(lr.date_range*lr.value) AS value_current
-	, sum((1-lr.date_range)*lr.value) AS value_previous
+	, sum(
+		((lr.date_range IN (-1,0,1))::INTEGER)*lr.value
+	) AS value_current
+	, sum(
+		((lr.date_range IN (-1,0))::INTEGER)*lr.value
+	) AS value_previous
 FROM long_results_content_growth lr
 GROUP BY lr.champion_id
 ),
@@ -95,7 +107,7 @@ SELECT wr.champion_id
 	, wr.value_current
 	, case
 	when wr.value_previous!=0
-		THEN 1.0*(wr.value_current - wr.value_previous)/wr.value_previous 
+		THEN 100.0*(wr.value_current - wr.value_previous)/wr.value_previous 
 	ELSE NULL 
 	END AS pct_change
 FROM wide_results_content_growth_0 wr
@@ -113,13 +125,18 @@ left join public.user_connected_to_champion_bridges uccb
 ON uccb.user_id=upaf.user_id
 WHERE upaf.platform_action IN (SELECT platform_action FROM consumption_actions)
 AND dr.date_range!=2
+AND dr.date_range>=0
 AND uccb.sequence_number=1
 GROUP BY uccb.champion_id, dr.date_range
 ),
 wide_results_consumption_activity_growth_0 AS (
 SELECT lr.champion_id
-	, sum(lr.date_range*lr.value) AS value_current
-	, sum((1-lr.date_range)*lr.value) AS value_previous
+	, sum(
+		((lr.date_range=1)::INTEGER)*lr.value
+	) AS value_current
+	, sum(
+		((lr.date_range=0)::INTEGER)*lr.value
+	) AS value_previous
 FROM long_results_consumption_activity_growth lr
 GROUP BY lr.champion_id
 ), 
@@ -130,7 +147,7 @@ SELECT wr.champion_id
 	, wr.value_current
 	, case
 	when wr.value_previous!=0
-		THEN 1.0*(wr.value_current - wr.value_previous)/wr.value_previous 
+		THEN 100.0*(wr.value_current - wr.value_previous)/wr.value_previous 
 	ELSE NULL 
 	END AS pct_change
 FROM wide_results_consumption_activity_growth_0 wr
@@ -141,14 +158,14 @@ WHERE cd.id IN (SELECT champion_ids FROM champion_ids)
 wide_results AS (
 SELECT cd.id AS champion_id
 	, cd.NAME AS champion_name
-	, wrca.value_current AS championing_actions_current
-	, wrca.value_previous AS championing_actions_previous
+	, coalesce(wrca.value_previous, 0) AS championing_actions_previous
+	, coalesce(wrca.value_current, 0) AS championing_actions_current
 	, wrca.pct_change AS championing_actions_pct_change
-	, wrcg.value_current AS content_growth_current
-	, wrcg.value_previous AS content_growth_previous
+	, coalesce(wrcg.value_previous, 0) AS content_growth_previous
+	, coalesce(wrcg.value_current, 0) AS content_growth_current
 	, wrcg.pct_change AS content_growth_pct_change
-	, wrcag.value_current AS consumption_actions_current
-	, wrcag.value_previous AS consumption_actions_previous
+	, coalesce(wrcag.value_previous, 0) AS consumption_actions_previous
+	, coalesce(wrcag.value_current, 0) AS consumption_actions_current
 	, wrcag.pct_change AS consumption_actions_pct_change
 FROM champion_dimensions cd
 left join wide_results_championing_actions wrca
@@ -161,5 +178,5 @@ WHERE cd.id IN (SELECT champion_ids FROM champion_ids)
 )
 SELECT * 
 FROM wide_results
-ORDER BY champion_id
+ORDER BY championing_actions_pct_change DESC
 ;
