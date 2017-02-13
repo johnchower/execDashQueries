@@ -1,3 +1,4 @@
+/* Runs on polymer_production */
 WITH 
 champion_ids AS (
 SELECT id AS champion_ids
