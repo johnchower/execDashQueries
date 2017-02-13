@@ -28,12 +28,13 @@ END AS date_range
 FROM date_dim
 ),
 long_results_0 AS (
-SELECT id
-	, user_id
+SELECT user_id
 	, tree_id
-	, date_id
+	, min(date_id) AS date_id
+	, min(id) AS id
 FROM public.content_progress_facts
 WHERE state='Complete'
+GROUP BY user_id, tree_id
 ), 
 long_results AS (
 SELECT tcb.champion_id AS champion_id
