@@ -65,8 +65,8 @@ GROUP BY champion_id, date_range
 ),
 wide_results AS (
 SELECT lr.champion_id
-	, sum(lr.date_range*lr.value) AS value_current
-	, sum((1-lr.date_range)*lr.value) AS value_previous
+	, sum((lr.date_range=1)::INTEGER*lr.value) AS value_current
+	, sum((lr.date_range=0)::INTEGER*lr.value) AS value_previous
 FROM long_results lr
 GROUP BY lr.champion_id
 )
