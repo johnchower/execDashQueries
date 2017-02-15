@@ -43,13 +43,14 @@ AND dr.date_range!=2
 AND uccb.sequence_number=1
 GROUP BY uccb.champion_id, dr.date_range
 ),
-wide_results AS (
+wide_results_0 AS (
 SELECT lr.champion_id
 	, sum(lr.date_range*lr.value) AS value_current
 	, sum((1-lr.date_range)*lr.value) AS value_previous
 FROM long_results lr
 GROUP BY lr.champion_id
-)
+), 
+wide_results AS (
 SELECT wr.champion_id
 	, cd.NAME AS champion_name
 	, wr.value_previous
@@ -59,8 +60,10 @@ SELECT wr.champion_id
 		THEN 1.0*(wr.value_current - wr.value_previous)/wr.value_previous 
 	ELSE NULL 
 	END AS pct_change
-FROM wide_results wr
+FROM wide_results_0 wr
 left join champion_dimensions cd
 ON cd.id=wr.champion_id
 WHERE cd.id IN (SELECT champion_ids FROM champion_ids)
+)
+SELECT * FROM wide_results
 ;
