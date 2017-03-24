@@ -76,7 +76,7 @@ SELECT wr.champion_id
 	, wr.value_current
 	, CASE
 	WHEN wr.value_previous!=0
-		THEN 1.0*(wr.value_current - wr.value_previous)/wr.value_previous 
+		THEN 100.0*(wr.value_current - wr.value_previous)/wr.value_previous 
 	ELSE NULL 
 	END AS pct_change
 FROM wide_results wr
